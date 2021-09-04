@@ -1,7 +1,7 @@
 {
     "theme_color": "#f6cafa",
     "background_color": "#ff7360",
-    "display": "fullscreen",
+    "display": "standalone",
     "scope": "/",
     "start_url": "/",
     "name": "코인기록-웰시코기",
