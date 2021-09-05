@@ -5,8 +5,15 @@
     <div class="inputBox">
         <input class="inputForm" type="text" placeholder="아이디" v-model="id" :onKeyup="this.id = this.id.replace(/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣|\s]/,'')">
     </div>
+    <div class="blankSet" v-show="idBlank">
+        <span class="failedSet">아이디를 입력해 주세요.</span>
+    </div>
+    
     <div class="inputBox">
         <input class="inputForm" type="password" placeholder="비밀번호" v-model="password" :onKeyup="this.password = this.password.replace(/\s/g,'')">
+    </div>
+    <div class="blankSet" v-show="passwordBlank">
+        <span class="failedSet">비밀번호를 입력해 주세요.</span>
     </div>
     <span v-show="failed" class="failedSet">아이디 혹은 비밀번호가 일치하지 않습니다.</span>
     <button class="disabledSet loginBtn" v-on:click="loginClick">로그인</button>
@@ -25,17 +32,24 @@ export default {
         return{
             id:'',
             password:'',
-            failed:false
+            failed:false,
+            idBlank:false,
+            passwordBlank:false
         }
     },
     methods:{
        loginClick:function(){
-           if(this.password != ''){
-               if(this.id != ''){
-                   this.readDB();
-               }
+           if(this.id === ''){
+               this.idBlank = true;
+               this.passwordBlank = false;
+           }
+           else if(this.password === ''){
+               this.idBlank = false;
+               this.passwordBlank = true;
            }else{
-               alert('아이디와 비밀번호를 입력해 주세요.');
+               this.idBlank = false;
+               this.passwordBlank = false;
+               this.readDB();
            }
        },
        readDB:function(){
@@ -44,14 +58,11 @@ export default {
             // const data = tt.val();
             onValue(already, (check) => {
                 const data = check.val();
-                console.log(data);
                 if(data === null){
                     this.failed = true;
                     this.password = '';
                 }else if(data != null) {
-                    console.log(data.password)
                     if(data.password === this.password){
-                        console.log('로그인성공');
                         localStorage.setItem('user_ID', this.id);
                         this.$router.push({path:'/'});
                     }else{
@@ -152,5 +163,12 @@ export default {
 }
 .signupSet:active{
     color:rgb(246, 84, 125);
+}
+.blankSet{
+    width:70%;
+    margin-right: auto;
+    margin-left:auto;
+    text-align: left;
+    font-size:13px;
 }
 </style>
