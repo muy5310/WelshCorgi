@@ -2,7 +2,7 @@
   <div id="app">
     <p class="title">기록하기</p>
     <div class="form-box">
-    
+    <label class="cautionSet">**저장 후 수정, 삭제가 불가능 하니 주의해 주세요**<br>(나한테 따로 말하면 해줌^0^)</label>
     <div class="form-div">
         <!-- <label class="labelSet">보유 KRW</label> -->
         <!-- <button v-if="id != ''&&!doubleCheck" class="doubleBtn" v-on:click="doubleCheckClick">중복 확인</button>  -->
@@ -14,6 +14,7 @@
         <input class="input-form" type="number" placeholder="총 매수 금액" v-model="user_amount">
     </div>
     <label class="cautionSet" v-show="caution">**모두 입력해 주세요.**</label>
+    <br>
     <button class="saveBtn" v-on:click="saveClick">저장</button>
     <br>
     <span class="spanSet"> <router-link to="/" class="loginSet"> 메인화면</router-link> 으로 돌아가기</span>
@@ -30,21 +31,32 @@ export default {
             user_amount:'',
             user_total:'',
             user_profit:'',
+            user_date:'',
             caution:false
         }
     },
     methods:{
         saveClick(){
             if(this.user_krw != '' && this.user_amount != ''){
+                this.user_date = this.getDate();
+                console.log(this.user_date);
                 this.user_total = parseInt(this.user_krw) + parseInt(this.user_amount);
                 var list = this.$store.state.record_list;
-                if(list != []){
-                    this.user_profit = parseInt(this.user_total) - parseInt(list.last_amount);
-                    list.last_amount = this.user_total;
-                    list.total_profit_loss = parseInt(this.user_profit) + parseInt(list.total_profit_loss);
-                    console.log(list);
-                    console.log(this.user_profit);
+
+                this.user_profit = parseInt(this.user_total) - parseInt(list.last_amount);
+                list.last_amount = parseInt(this.user_total);
+                list.coin_record.unshift({'KRW' : parseInt(this.user_krw), 'buy_amount' : parseInt(this.user_amount), 'date' : this.user_date, 'profit_loss' : parseInt(this.user_profit)})
+                if(list.coin_record.length === 1){
+                    list.total_profit_loss = 0;
                 }
+                else{
+                    list.total_profit_loss = parseInt(this.user_profit) + parseInt(list.total_profit_loss);
+                }
+                this.dbWrite(list);
+
+            }
+            else{
+                this.caution = true;
             }
             
             // console.log(alreadyCheck);
@@ -65,26 +77,32 @@ export default {
             //     }).then(alert('성공2'))
             // }
         },
-        dbWrite:function(){
-            if(this.password_two != '1234'){
-                this.writeData = '';
-                this.caution = true;
-            }else{
-            const db = getDatabase();
-            set(ref(db, 'users/' + this.id),{
-                    id:this.id,
-                    password:this.password_two,
-                    name:this.name
-            }).then(alert('성공'))
+        getDate:function(){
+            let today = new Date();
+            let week =[ '일', '월', '화', '수', '목', '금', '토',]
+            let year = today.getFullYear();
+            let month = today.getMonth() + 1;
+            let date = today.getDate();
+            let day = week[today.getDay()];
 
-            set(ref(db, 'record/'+this.id),{
-                    name:this.name,
-                    coin_record:[{date:'2021-07-02', KRW: 30000, buy_amount : 60000, profit_loss : 2000},
-                    {date:'2021-07-03', KRW: 20000, buy_amount : 90000, profit_loss : 20000}],
-                    total_profit_loss:22000,
-                    last_amount:11000
-            }).then(this.$router.push({path:'/'}))
+            return year + "-" + this.zeroAdd(month) + "-" + this.zeroAdd(date) + " " + day;
+        },
+        zeroAdd(num){
+            if (num < 10){
+                return "0" + String(num);
             }
+            return
+        },
+        dbWrite(list){
+            const db = getDatabase();
+
+            set(ref(db, 'record/' + localStorage.getItem('user_ID')),{
+                    name : list.name,
+                    coin_record : list.coin_record,
+                    total_profit_loss : list.total_profit_loss,
+                    last_amount : list.last_amount
+            }).then(alert('저장 완료!'),this.$router.push({path:'/'}))
+            
         },
         moveLoginClick:function(){
             this.$router.push({path:'/login'});
@@ -110,7 +128,7 @@ export default {
 .title{
     font-family: 'S-CoreDream-9Black';
     font-size:25px;
-    background: linear-gradient(to right, rgb(248, 201, 225), rgb(114, 3, 189));
+    background: linear-gradient(to right, rgb(248, 201, 225), rgb(255, 77, 122));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     /* -webkit-text-stroke: 1px rgb(70, 44, 44); */
@@ -118,7 +136,7 @@ export default {
     margin-bottom: 80px;
 }
 .title:hover{
-    background: linear-gradient(to right, rgb(248, 201, 225), rgb(255, 77, 122));
+    background: linear-gradient(to right, rgb(248, 201, 225), rgb(114, 3, 189));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -142,9 +160,9 @@ export default {
     border:none;
     height: 40px;
     width:70%;
-    caret-color:pink;
+    caret-color:rgb(192, 98, 255);
     font-family: 'IM_Hyemin-Bold';
-    border-bottom: 1.5px solid rgb(192, 98, 255);
+    border-bottom: 1.5px solid pink;
 }
 .saveBtn{
     border:none;
@@ -159,14 +177,15 @@ export default {
     color:rgb(58, 38, 41);
     box-shadow : 2px 2px 5px rgb(177, 177, 177);
     /* -webkit-text-stroke: 1px rgb(250, 117, 117); */
-    background-image: linear-gradient(to left, #cd9cf2 0%, #e2d9ff 100%);
+    background-image: linear-gradient(to left, #ff9a9e 0%, #fecfef 99%, #fde5f6 100%);
+
     /* background-image: linear-gradient(to left, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); */
 }
 .saveBtn:active{
-    background-image: linear-gradient(to left, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+        background-image: linear-gradient(to left, #cd9cf2 0%, #e2d9ff 100%);
 }
 .saveBtn:hover{
-    background-image: linear-gradient(to left, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+        background-image: linear-gradient(to left, #cd9cf2 0%, #e2d9ff 100%);
 }
 
 .spanSet{

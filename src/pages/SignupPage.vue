@@ -86,7 +86,6 @@ export default {
             // const data = tt.val();
             onValue(already, (check) => {
                 const data = check.val();
-                console.log(data);
                 if(data === null){
                     this.writeData = true;
                     this.dbWrite();
@@ -119,18 +118,17 @@ export default {
             }else{
             const db = getDatabase();
             set(ref(db, 'users/' + this.id),{
-                    id:this.id,
-                    password:this.password_two,
-                    name:this.name
-            }).then(alert('성공'))
+                    id : this.id,
+                    password : this.password_two,
+                    name : this.name
+            }).then()
 
-            set(ref(db, 'record/'+this.id),{
-                    name:this.name,
-                    coin_record:[{date:'2021-07-02', KRW: 30000, buy_amount : 60000, profit_loss : 2000},
-                    {date:'2021-07-03', KRW: 20000, buy_amount : 90000, profit_loss : 20000}],
-                    total_profit_loss:22000,
-                    last_amount:11000
-            }).then(this.$router.push({path:'/'}))
+            set(ref(db, 'record/' + this.id),{
+                    name : this.name,
+                    coin_record : "",
+                    total_profit_loss : 0,
+                    last_amount : 0
+            }).then(alert('회원가입 완료!'), this.$router.push({path:'/login'}))
             }
         },
         moveLoginClick:function(){
