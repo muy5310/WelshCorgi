@@ -9,3 +9,6 @@ from '../pages/LoginPage';
 
 export { default as SignupPage }
 from '../pages/SignupPage.vue';
+
+export { default as DewitPage }
+from '../pages/DewitPage.vue';

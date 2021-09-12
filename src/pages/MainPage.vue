@@ -18,6 +18,7 @@
             <div class="recordBoard" v-for="(record, i) in recordList" v-bind:key="i">
                 <div class="dateLine">
                     <label class="dateSet">#{{recordList.length - i}}. {{record.date}}</label>
+                    <i class="far fa-times-circle removeIcon" v-if="i === 0" v-on:click="removeClick"></i>
                 </div>
                 <div class="moonLine" v-if="recordList.length - i != 1">
                     <label>
@@ -61,7 +62,7 @@
 </template>
 
 <script>
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, set } from "firebase/database";
 
 export default {
     data(){
@@ -71,7 +72,8 @@ export default {
             totalAmount : 0,
             recordList:[],
             lastAmount: 0,
-            exist:false
+            exist:false,
+            name:''
         }
     },
     mounted(){
@@ -103,6 +105,31 @@ export default {
             if(confirm("이스터에그!\n확인을 누른 후 새로 고침!!을 하고 재로그인 해주세요*><*") === true){
                 localStorage.clear();
                 this.$router.go();
+            }
+        },
+        removeClick:function(){
+            if(confirm("기록 삭제\n진짜?!로 기록을 지우시겠습니까?") === true){
+                const db = getDatabase();
+                if(this.recordList.length > 2){
+                    this.totalAmount = parseInt(this.totalAmount) - parseInt(this.recordList[0].profit_loss);
+                    this.lastAmount = parseInt(this.recordList[1].buy_amount) + parseInt(this.recordList[1].KRW);
+                    this.recordList.shift();
+
+                    set(ref(db, 'record/' + localStorage.getItem('user_ID')),{
+                        name : this.name,
+                        coin_record : this.recordList,
+                        total_profit_loss : this.totalAmount,
+                        last_amount : this.lastAmount
+                    }).then()  
+                }
+                else{
+                    set(ref(db, 'record/' + localStorage.getItem('user_ID')),{
+                        name : this.name,
+                        coin_record : "",
+                        total_profit_loss : 0,
+                        last_amount : 0
+                    }).then()  
+                }
             }
         },
         loading:function(){
@@ -222,6 +249,7 @@ export default {
     height: 100%;
 }
 .dateLine{
+    display:flex;
     box-shadow : 2px 2px 5px rgb(218, 202, 224);
     border-radius: 10px 10px 0 0;
     width: 100%;
@@ -237,6 +265,15 @@ export default {
     font-family: 'Uiyeun';
     color:rgb(255, 255, 255);
     /* -webkit-text-stroke: 1px rgb(0, 0, 0); */
+}
+.removeIcon{
+    font-size:13px;
+    color: white;
+    margin-left:auto;
+    margin-top:5px;
+}
+.removeIcon:active{
+    color:blueviolet;
 }
 .firstSet{
     font-family: 'Uiyeun';

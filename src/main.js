@@ -6,7 +6,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import {store} from "./js/store";
 
-import {MainPage, RecordPage, LoginPage, SignupPage} from './js'
+import {MainPage, RecordPage, LoginPage, SignupPage, DewitPage} from './js'
 
 Vue.config.productionTip = false
 
@@ -21,6 +21,9 @@ const router = new VueRouter({
   },{
     path:'/record',
     component:RecordPage
+  },{
+    path:'/dewit',
+    component:DewitPage
   },{
     path:'/login',
     component:LoginPage
