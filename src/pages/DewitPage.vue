@@ -1,23 +1,24 @@
 <template>
   <div id="app">
-    <p class="title">기록하기</p>
+    <p class="title">입출금 기록</p>
     <div class="form-box">
-    <label class="cautionSet" v-if="this.$store.state.record_list.coin_record != '' ">** 저번 기록 후, 입출금 한 적이 있으면<br> <router-link to="/dewit"> 입출금</router-link> 기록 먼저 해야 계산 안꼬임 !!!@@ **</label>
-    <div class="form-div">
+    <label class="cautionSet">**저장 후 수정,삭제가 불가능 하니 주의해 주세요**<br></label>
+    <label class="cautionSet">*입출금 내역 조회 기능은 나중에 . . *<br></label>
+    <div class="radio-div">
         <!-- <label class="labelSet">보유 KRW</label> -->
         <!-- <button v-if="id != ''&&!doubleCheck" class="doubleBtn" v-on:click="doubleCheckClick">중복 확인</button>  -->
         <!-- :onKeyup="this.id=this.id.replace(/\s/g,'')" -->
         <!-- <i v-if="doubleCheck" class="fas fa-check-circle checkIcon checkTrue"></i> -->
-        <input class="input-form" type="number" placeholder="보유 KRW" v-model="user_krw">
+       
+        <input type="radio" id="deposit" v-model="radioValues" value="deposit"><label for="deposit">입금</label>
+        <input type="radio" id="withdraw" v-model="radioValues" value="withdraw"><label for="withdraw">출금</label>
     </div>
     <div class="form-div">
-        <input class="input-form" type="number" placeholder="총 매수 금액" v-model="user_amount">
+        <input class="input-form" type="number" placeholder="금액" v-model="user_amount">
     </div>
-    <label class="cautionSet" v-show="caution">**모두 입력해 주세요.**</label>
+    <label class="cautionSet" v-show="caution">**금액을 입력해 주세요.**</label>
     <br>
     <button class="saveBtn" v-on:click="saveClick">저장</button>
-    <br>
-    <span class="spanSet"  v-if="this.$store.state.record_list.coin_record != '' "> <router-link to="/dewit" class="loginSet" > 입출금</router-link> 기록 하러 가기</span>
     <br>
     <span class="spanSet"> <router-link to="/" class="loginSet"> 메인화면</router-link> 으로 돌아가기</span>
   </div></div>
@@ -34,88 +35,38 @@ export default {
             user_total:'',
             user_profit:'',
             user_date:'',
-            caution:false
+            caution:false,
+            radioValues:'deposit'
         }
     },
     methods:{
         saveClick(){
-            if(this.user_krw != '' && this.user_amount != ''){
-                this.user_date = this.getDate();
-                console.log(this.user_date);
-                this.user_total = parseInt(this.user_krw) + parseInt(this.user_amount);
+            if(this.user_amount != ''){
                 var list = this.$store.state.record_list;
-                this.user_profit = parseInt(this.user_total) - parseInt(list.last_amount);
-                list.last_amount = parseInt(this.user_total);
-                list.coin_record.unshift({'KRW' : parseInt(this.user_krw), 'buy_amount' : parseInt(this.user_amount), 'date' : this.user_date, 'profit_loss' : parseInt(this.user_profit)})
-                if(list.coin_record.length === 1){
-                    list.total_profit_loss = 0;
+                if(this.radioValues === 'deposit'){
+                    list.last_amount = parseInt(list.last_amount) + parseInt(this.user_amount);
+                    this.dbWrite(list);
                 }
                 else{
-                    list.total_profit_loss = parseInt(this.user_profit) + parseInt(list.total_profit_loss);
+                    list.last_amount = parseInt(list.last_amount) - parseInt(this.user_amount);
+                    this.dbWrite(list);
                 }
-                this.dbWrite(list);
-
             }
             else{
                 this.caution = true;
             }
-            
-            // console.log(alreadyCheck);
-            // if(alreadyCheck){
-            //     console.log('jo');
-            //     await set(ref(db, 'users/' + this.id),{
-            //         id:this.id,
-            //         password:this.password_two,
-            //         name:this.name
-            //     }).then(alert('성공'))
-
-            //     await set(ref(db, 'record/'+this.id),{
-            //         name:this.name,
-            //         coin_record:[{date:'2021-07-02', KRW: 30000, buy_amount : 60000, profit_loss : 2000},
-            //         {date:'2021-07-03', KRW: 20000, buy_amount : 90000, profit_loss : 20000}],
-            //         total_profit_loss:22000,
-            //         last_amount:11000
-            //     }).then(alert('성공2'))
-            // }
         },
-        getDate:function(){
-            let today = new Date();
-            let week =[ '일', '월', '화', '수', '목', '금', '토',]
-            let year = today.getFullYear();
-            let month = today.getMonth() + 1;
-            let date = today.getDate();
-            let day = week[today.getDay()];
-
-            return year + "-" + this.zeroAdd(month) + "-" + this.zeroAdd(date) + " " + day;
-        },
-        zeroAdd(num){
-            if (num < 10){
-                return "0" + String(num);
-            }
-            else {
-                return num;
-            }
-        },
+        
         dbWrite(list){
             const db = getDatabase();
 
-            set(ref(db, 'record/' + localStorage.getItem('user_ID')),{
+            set(ref(db, 'record/' + localStorage.getItem('user_ID') ),{
                     name : list.name,
                     coin_record : list.coin_record,
                     total_profit_loss : list.total_profit_loss,
                     last_amount : list.last_amount
-            }).then(alert('저장 완료!'),this.$router.push({path:'/'}))
+            }).then(this.$router.push({path:'/'}),alert('기록 완료!'))
             
-        },
-        moveLoginClick:function(){
-            this.$router.push({path:'/login'});
-        },
-        test(){
-            // SecureRandom rnd = new SecureRandom();
-            // byte[] temp = new byte[SALT_SIZE];
-            // rnd.nextBytes(temp);
-            // return
-
         }
     }
 
@@ -143,6 +94,18 @@ export default {
     background: linear-gradient(to right, rgb(248, 201, 225), rgb(114, 3, 189));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+.radio-div{
+    align-items: center;
+    width:70%;
+    /* max-width: 480px; */
+    margin:0;
+    margin-bottom:10px;
+    /* margin:10px; */
+    
+    margin-top:10px;
+    margin-left: auto;
+    margin-right: auto;
 }
 .form-div{
     display:flex;
